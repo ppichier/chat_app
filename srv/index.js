@@ -1,6 +1,8 @@
 var app = require("express")();
 var http = require("http").createServer(app);
-var io = require("socket.io")(http);
+var io = require("socket.io")(http, {
+  pingTimeout: 60000
+});
 
 app.get("/", function(req, res) {
   res.send("<h1>Hello world</h1>");

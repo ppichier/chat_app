@@ -26,9 +26,14 @@ const useStyles = makeStyles(theme => ({
     height: "300px",
     borderRight: "1px solid grey"
   },
-  chatWindow: { width: "70%", height: "300px", padding: "20px" },
+  chatWindow: {
+    width: "70%",
+    height: "300px",
+    padding: "20px",
+    overflowY: "auto"
+  },
   chatBox: { width: "85%" },
-  button: { width: "15%" }
+  button: { marginLeft: "50px", width: "10%" }
 }));
 
 export default function Dashboard() {
@@ -88,12 +93,14 @@ export default function Dashboard() {
             color="primary"
             className={classes.button}
             onClick={() => {
-              sendChatAction({
-                from: user,
-                msg: textValue,
-                topic: activeTopic
-              });
-              setTextValue("");
+              if (textValue !== "") {
+                sendChatAction({
+                  from: user,
+                  msg: textValue,
+                  topic: activeTopic
+                });
+                setTextValue("");
+              }
             }}
           >
             Send

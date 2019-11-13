@@ -5,14 +5,19 @@ export const CTX = React.createContext();
 
 const initialState = {
   general: [
-    { from: "aarom", msg: "hello" },
+    /* { from: "aarom", msg: "hello" },
     { from: "arnold", msg: "hello" },
-    { from: "ppichier", msg: "hello" }
+    { from: "ppichier", msg: "hello" } */
   ],
-  topic2: [
+  finance: [
+    /* { from: "aarom", msg: "hello" },
     { from: "aarom", msg: "hello" },
+    { from: "aarom", msg: "hello" } */
+  ],
+  dev: [
+    /* { from: "aarom", msg: "hello" },
     { from: "aarom", msg: "hello" },
-    { from: "aarom", msg: "hello" }
+    { from: "aarom", msg: "hello" } */
   ]
 };
 
@@ -39,17 +44,18 @@ let socket;
 function sendChatAction(value) {
   socket.emit("chat message", value);
 }
+let user = null;
 
 export default function Store(props) {
   const [allChats, dispatch] = React.useReducer(reducer, initialState);
   if (!socket) {
+    user = "aaron" + Math.floor(Math.random() * 100);
     socket = io(":3001");
     socket.on("chat message", function(msg) {
       dispatch({ type: "RECEIVE_MESSAGE", payload: msg });
     });
   }
 
-  const user = "aaron" + Math.random(100).toFixed(2);
   return (
     <CTX.Provider value={{ allChats, sendChatAction, user }}>
       {props.children}
