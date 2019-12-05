@@ -47,10 +47,13 @@ function sendChatAction(value) {
 let user = null;
 
 export default function Store(props) {
+  console.log("Socket init");
   const [allChats, dispatch] = React.useReducer(reducer, initialState);
   if (!socket) {
+    console.log("Socket init");
     user = "aaron" + Math.floor(Math.random() * 100);
     socket = io(":3001");
+    console.log("yoo");
     socket.on("chat message", function(msg) {
       dispatch({ type: "RECEIVE_MESSAGE", payload: msg });
     });
