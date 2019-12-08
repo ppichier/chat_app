@@ -1,3 +1,6 @@
+import models, { connectDb } from "./models";
+import "dotenv/config";
+
 var app = require("express")();
 var http = require("http").createServer(app);
 var io = require("socket.io")(http, {
@@ -16,8 +19,52 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(3001, function() {
-  const host = http.address().address;
-  const port = http.address().port;
-  console.log("App listening at http://%s:%s", host, port);
+const eraseDatabaseOnSync = false; // Set to true for re-initialize the db on every express server start
+
+connectDb().then(async () => {
+  if (eraseDatabaseOnSync) {
+    await Promise.all([
+      models.User.deleteMany({}),
+      models.Message.deleteMany({})
+    ]);
+  }
+
+  http.listen(3001, function() {
+    const host = http.address().address;
+    const port = http.address().port;
+    console.log("App listening at http://%s:%s", host, port);
+  });
+
+  createUsersWithMessages();
 });
+
+const createUsersWithMessages = async () => {
+  const user1 = new models.User({
+    username: "ppichier"
+  });
+
+  const user2 = new models.User({
+    username: "ddavids"
+  });
+
+  const message1 = new models.Message({
+    text: "Published the Road to learn React",
+    user: user1.id
+  });
+
+  const message2 = new models.Message({
+    text: "Happy to release ...",
+    user: user2.id
+  });
+  const message3 = new models.Message({
+    text: "Published a complete ...",
+    user: user2.id
+  });
+
+  await message1.save();
+  await message2.save();
+  await message3.save();
+
+  await user1.save();
+  await user2.save();
+};
