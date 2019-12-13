@@ -1,25 +1,43 @@
-import models, { connectDb } from "./models";
 import "dotenv/config";
+import express from "express";
+import cors from "cors";
 
-var app = require("express")();
+import models, { connectDb } from "./models";
+import routes from "./routes";
+
+var app = express();
 var http = require("http").createServer(app);
+
 var io = require("socket.io")(http, {
   pingTimeout: 60000
 });
 
-app.get("/", function(req, res) {
-  res.send("<h1>Hello world</h1>");
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(async (req, res, next) => {
+  req.context = {
+    models,
+    me: await models.User.findByLogin("rwieruch")
+  };
+  next();
 });
+
+app.use("/session", routes.session);
+app.use("/users", routes.user);
+app.use("/messages", routes.message);
 
 io.on("connection", function(socket) {
   console.log("a user connected");
   socket.on("chat message", function(msg) {
     console.log("message " + JSON.stringify(msg));
+
     io.emit("chat message", msg);
   });
 });
 
-const eraseDatabaseOnSync = false; // Set to true for re-initialize the db on every express server start
+const eraseDatabaseOnSync = true; // Set to true for re-initialize the db on every express server start
 
 connectDb().then(async () => {
   if (eraseDatabaseOnSync) {
@@ -29,7 +47,7 @@ connectDb().then(async () => {
     ]);
   }
 
-  http.listen(3001, function() {
+  http.listen(process.env.PORT, function() {
     const host = http.address().address;
     const port = http.address().port;
     console.log("App listening at http://%s:%s", host, port);
@@ -40,31 +58,39 @@ connectDb().then(async () => {
 
 const createUsersWithMessages = async () => {
   const user1 = new models.User({
-    username: "ppichier"
+    userName: "rwieruc"
   });
-
   const user2 = new models.User({
-    username: "ddavids"
+    userName: "ddavid"
   });
-
   const message1 = new models.Message({
-    text: "Published the Road to learn React",
-    user: user1.id
+    msg: "Published the Road to learn React",
+    from: user1.id,
+    topic: "general"
   });
-
   const message2 = new models.Message({
-    text: "Happy to release ...",
-    user: user2.id
+    msg: "Happy to release ...",
+    from: user2.id,
+    topic: "general"
   });
   const message3 = new models.Message({
-    text: "Published a complete ...",
-    user: user2.id
+    msg: "Published a complete ...",
+    from: user2.id,
+    topic: "finance"
+  });
+  await Promise.all([
+    message1.save(),
+    message2.save(),
+    message3.save(),
+    user1.save(),
+    user2.save()
+  ]);
+
+  models.User.find(function(err, users) {
+    if (err) return console.error(err);
+    console.log(users);
   });
 
-  await message1.save();
-  await message2.save();
-  await message3.save();
-
-  await user1.save();
-  await user2.save();
+  // const user = await models.User.find({ userName: "ddavid" });
+  // console.log(user);
 };

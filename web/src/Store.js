@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import io from "socket.io-client";
+import axios from "axios";
 
 export const CTX = React.createContext();
 
@@ -22,9 +23,9 @@ const initialState = {
 };
 
 function reducer(state, action) {
-  const { from, msg, topic } = action.payload;
   switch (action.type) {
     case "RECEIVE_MESSAGE":
+      const { from, msg, topic } = action.payload;
       return {
         ...state,
         [topic]: [
@@ -35,6 +36,19 @@ function reducer(state, action) {
           }
         ]
       };
+    case "LOAD_DB_MESSAGES_GENERAL":
+      let general_messages = action.payload.filter(
+        data => data.topic === "general"
+      );
+      let finance_messages = action.payload.filter(
+        data => data.topic === "finance"
+      );
+      let dev_messages = action.payload.filter(data => data.topic === "dev");
+      return {
+        general: [...state["general"], ...general_messages],
+        finance: [...state["finance"], ...finance_messages],
+        dev: [...state["dev"], ...dev_messages]
+      };
     default:
       return state;
   }
@@ -42,12 +56,27 @@ function reducer(state, action) {
 
 let socket;
 function sendChatAction(value) {
+  axios
+    .post("http://localhost:3001/messages", value)
+    .then(res => console.log(res))
+    .catch(err => console.error(err));
   socket.emit("chat message", value);
 }
 let user = null;
 
 export default function Store(props) {
   const [allChats, dispatch] = React.useReducer(reducer, initialState);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/messages")
+      .then(res => {
+        dispatch({ type: "LOAD_DB_MESSAGES_GENERAL", payload: res.data });
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }, []);
   if (!socket) {
     console.log("SOCKER INIT");
     user = "aaron" + Math.floor(Math.random() * 100);

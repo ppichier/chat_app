@@ -1,11 +1,21 @@
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema({
-  text: {
+  msg: {
     type: String,
     required: true
   },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "user" }
+  from: {
+    type: String,
+    required: true
+    // ref: "user"
+  },
+  topic: {
+    type: String,
+    required: true
+  }
+
+  // user: { type: mongoose.Schema.Types.ObjectId, ref: "user" }
 });
 
 const Message = mongoose.model("Message", messageSchema);

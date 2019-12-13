@@ -19,6 +19,7 @@ userSchema.statics.findByLogin = async function(login) {
   return user;
 };
 
+//Every time a user is deleted, this hook makes sure that all messages that belong to this user are deleted as well
 userSchema.pre("remove", function(next) {
   this.model("Message").deleteMany({ user: this._id }, next);
 });
